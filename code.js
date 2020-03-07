@@ -3,9 +3,17 @@ setTimeout(function () {
         let nodes = figma.currentPage.selection;
         let arrayError = [];
         let arrayIssue = [];
+        // error holder arrays
         let arrayMasterComponent = [];
         let arrayUniqueName = [];
         let arrayWrongFont = [];
+        let arrayNoDesc = [];
+        let arrayUniqueNameCheck = [];
+        let arrayNoInstance = [];
+        let arrayFontStyle = [];
+        let arrayFrameCheck = [];
+        let arrayFillCheck = [];
+        let arrayBorderCheck = [];
         function errorMsg() {
             figma.closePlugin('⚠️ Please select a master component ⚠️');
         }
@@ -17,7 +25,7 @@ setTimeout(function () {
             for (const node of nodes) {
                 if (node.type === 'COMPONENT') {
                     // show UI
-                    figma.showUI(__html__, { width: 380, height: 550 });
+                    figma.showUI(__html__, { width: 380, height: 555 });
                     // instance checker
                     const searchAll = figma.root.findAll();
                     searchAll.forEach(item => {
@@ -26,7 +34,8 @@ setTimeout(function () {
                         }
                     });
                     if (arrayMasterComponent.length === 0) {
-                        arrayError.push("No instance description");
+                        arrayError.push("No instance");
+                        arrayNoInstance.push("component");
                         figma.ui.postMessage({
                             'noFoundInstance': true,
                             'troubleFound': true
@@ -43,6 +52,7 @@ setTimeout(function () {
                     const uniqueNameLength = arrayUniqueName.length;
                     if (uniqueNameLength >= 2) {
                         arrayError.push("Duplicate name");
+                        arrayUniqueNameCheck.push(node.name);
                         figma.ui.postMessage({
                             'badName': true,
                             'badNameFound': node.name,
@@ -53,8 +63,8 @@ setTimeout(function () {
                     const descriptionLength = node.description.length;
                     if (descriptionLength === 0) {
                         arrayIssue.push("No component description");
+                        arrayNoDesc.push("description");
                         figma.ui.postMessage({
-                            'badDesc': true,
                             'troubleFound': true
                         });
                     }
@@ -80,6 +90,7 @@ setTimeout(function () {
                                 const hasStyleLength = hasStyle.length;
                                 if (hasStyleLength === 0) {
                                     arrayError.push("Missing global text style: " + child.name);
+                                    arrayFontStyle.push(child.name);
                                     figma.ui.postMessage({
                                         'badFontStyle': true,
                                         'badFontStyleType': child.name,
@@ -90,18 +101,25 @@ setTimeout(function () {
                             // frame checker
                             if (child.type === 'FRAME') {
                                 arrayIssue.push("Nested Frame: " + child.name);
+                                arrayFrameCheck.push(child.name);
                                 figma.ui.postMessage({
                                     'badFrame': true,
                                     'badFrameName': child.name,
                                     'troubleFound': true
                                 });
                             }
-                            if (child.type === 'RECTANGLE') {
+                            if (child.type === 'RECTANGLE' ||
+                                child.type === 'ELLIPSE' ||
+                                child.type === 'POLYGON' ||
+                                child.type === 'VECTOR' ||
+                                child.type === 'STAR') {
                                 // fill global style checker
                                 const hasStyle = child.fillStyleId;
                                 const hasStyleLength = hasStyle.length;
                                 if (hasStyleLength === 0) {
                                     arrayError.push("Missing global fill style: " + child.name);
+                                    console.log(arrayError);
+                                    arrayFillCheck.push(child.name);
                                     figma.ui.postMessage({
                                         'badFill': true,
                                         'badFillLayer': child.name,
@@ -114,6 +132,7 @@ setTimeout(function () {
                                 if (strokeAttachedLength === 1) {
                                     if (child.strokeAlign === 'CENTER' || child.strokeAlign === 'INSIDE') {
                                         arrayIssue.push("Stroke not outside: " + child.name);
+                                        arrayBorderCheck.push(child.name);
                                         figma.ui.postMessage({
                                             'badStroke': true,
                                             'badStrokeLayer': child.name,
@@ -129,13 +148,20 @@ setTimeout(function () {
                     componentChildren(nodes);
                     const arrayErrorLength = arrayError.length;
                     const arrayIssueLength = arrayIssue.length;
-                    arrayWrongFont.forEach(element => {
-                        // console.log(element);
-                    });
+                    arrayWrongFont.reverse();
+                    arrayFillCheck.reverse();
+                    arrayBorderCheck.reverse();
                     figma.ui.postMessage({
                         'errorLength': arrayErrorLength,
                         'issueLength': arrayIssueLength,
-                        'jsonWrongFont': arrayWrongFont
+                        'arrayWrongFont': arrayWrongFont,
+                        'arrayDescMissing': arrayNoDesc,
+                        'arrayUniqueNameCheck': arrayUniqueNameCheck,
+                        'arrayNoInstance': arrayNoInstance,
+                        'arrayFontStyle': arrayFontStyle,
+                        'arrayFrameCheck': arrayFrameCheck,
+                        'arrayFillCheck': arrayFillCheck,
+                        'arrayBorderCheck': arrayBorderCheck
                     });
                 } // end if component
             } // end loop through

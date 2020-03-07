@@ -533,7 +533,7 @@
     font-family: 'inter';
     border-radius: 4px;
     margin-bottom: 4px;
-    display: none;
+    /* display: none; */
     position: relative;
   }
 
@@ -575,14 +575,14 @@
   }
 
   .success-text {
-    padding: 10px 40px;
+    padding: 10px 50px;
     text-align: center;
     line-height: 18px;
     color: #1D2B36;
   }
 
   .illo {
-    margin-top: 90px;
+    margin-top: 120px;
   }
 
   #info {
@@ -635,7 +635,7 @@
         <div class="logo">
           <svg width="18" height="22" viewBox="0 0 18 22" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path fill-rule="evenodd" clip-rule="evenodd" d="M7.63043 6.5C8.41304 5.6875 9 4.46875 9 3.25C9 2.03125 8.51087 0.8125 7.72826 0L1.36957 6.5C0.586957 7.3125 0 8.53125 0 9.75C0.0978265 11.0703 0.586957 12.1875 1.36957 13L7.63043 6.5ZM10.3846 15.5C9.59341 16.3125 9 17.5312 9 18.75C9 19.9687 9.49451 21.1875 10.2857 22L16.6154 15.5C17.4066 14.6875 18 13.4687 18 12.25C18 11.0312 17.5055 9.91404 16.7143 8.99998L10.3846 15.5ZM7.57377 9.2L10.2295 6.5L12.0984 4.6L16.7213 0C17.5082 0.8 18 2 18 3.2C18 4.4 17.4098 5.6 16.6229 6.4L12.0984 11L10.2295 12.9L7.57377 15.6L5.70492 17.5L1.27869 22C0.491803 21.2 0 20 0 18.8C0 17.6 0.590164 16.4 1.37705 15.6L5.80328 11.1L7.57377 9.2Z" fill="#1292EE"/>
-            </svg>          
+            </svg>
         </div>
         <div id="deets" class="type type--pos-small-normal">
           Check found <span id="count-error" class=""></span> <span id="count-issue" class=""></span> with this component
@@ -644,19 +644,10 @@
   
       <div id="error-wrap" class="">
         <h2 class="type type--pos-medium-medium title">Errors</h2>
-        <div id="error--font" class="error"><div class="icon icon--type-error"></div>Incorrect font in use, "<span id="badFontType"></span>"</div>
-        <div id="error--fontstyle" class="error"><div class="icon icon--break-error"></div>Missing global text style on layer "<span id="badFontStyle"></span>"</div>
-        <div id="error--fill" class="error"><div class="icon icon--break-error"></div>Missing global fill style on layer "<span id="badFillStyle"></span>"</div>
-        <div id="error--instance" class="error"><div class="icon icon--component-error"></div>Missing a demo variant of the component</div>
-        <div id="error--name" class="error"><div class="icon icon--component-error"></div>Another component found with the name "<span id="badNameSpan"></span>"</div>
-
       </div>
   
       <div id="issue-wrap" class="">
         <h2 class="type type--pos-medium-medium title">Warnings</h2>
-        <div id="issue--desc" class="issue"><div class="icon icon--comment-issue"></div>Missing a component description</div>
-        <div id="issue--frame" class="issue"><div class="icon icon--frame-issue"></div>Nested frame found, "<span id="badFrameName"></span>"</div>
-        <div id="issue--stroke-outside" class="issue"><div class="icon icon--stroke-weight-issue"></div>Stroke on layer "<span id="badStroke"></span>" should be set to "Outside"</div>
       </div>
     </div>
       
@@ -747,52 +738,21 @@
 <script>
 
 
+// prevent blink
+
 var el = document.getElementById("wrapper");
 
 setTimeout(function(){ 
   el.classList.add("in-view");
  }, 100);
+
+ // re-run plugin button
  
  document.getElementById('reheck').onclick = () => {
   parent.postMessage({ pluginMessage: { type: 'recheck' } }, '*')
  }
 
   window.onmessage = async (event) => {
-
-    var issuedFont = event.data.pluginMessage.jsonWrongFont;
-
-    function checker(checkIssue,checkStart,checkIcon,checkMessage,checkId) {
-
-      if (checkIssue !== undefined) {
-
-        var logged = checkIssue;
-
-        logged.forEach(element => {
-          var start = checkStart;
-          var icon = checkIcon;
-          var message = checkMessage;
-          var variable = element;
-          var end = "</div>";
-          var all = start + icon + message + variable + end;
-
-          var z = document.createElement('div');
-          z.innerHTML = all;
-
-          document.getElementById(checkId).appendChild(z);
-        });
-      }
-    }
-
-    checker(
-      issuedFont,
-      "<div class='error show'>",
-      "<div class='icon icon--type-error'></div>",
-      "Incorrect font in use, ",
-      "error-wrap"
-    )
-    
-    
-
 
   // if any trouble
 
@@ -807,7 +767,6 @@ setTimeout(function(){
   if (event.data.pluginMessage.errorLength >=1) {
     var element = document.getElementById("error-wrap");
     element.classList.add("show");
-
 
     var countError = event.data.pluginMessage.errorLength + " error(s)"
     document.getElementById("count-error").textContent=countError;
@@ -827,77 +786,113 @@ setTimeout(function(){
     elementIssue.classList.add("show-inline");
   }
 
+  // check and execute
 
-  // issues
+  function checker(checkIssue,checkStart,checkIcon,checkMessage,checkId) {
 
-  // check stroke outside
-  if (event.data.pluginMessage.badStroke === true) {
-		var element = document.getElementById("issue--stroke-outside");
-    element.classList.add("show");
+    if (checkIssue !== undefined) {
 
-    var badStrokeItem = event.data.pluginMessage.badStrokeLayer
-    document.getElementById("badStroke").textContent=badStrokeItem;
+      var logged = checkIssue;
+
+      logged.forEach(element => {
+        var start = checkStart;
+        var icon = checkIcon;
+        var message = checkMessage;
+        var variable = element;
+        var end = "</div>";
+        var all = start + icon + message + variable + end;
+
+        var z = document.createElement('div');
+        z.innerHTML = all;
+
+        document.getElementById(checkId).appendChild(z);
+      });
+    }
   }
 
-  // no description
-  if (event.data.pluginMessage.badFrame === true) {
-		var element = document.getElementById("issue--frame");
-    element.classList.add("show");
-    var badFrameItem = event.data.pluginMessage.badFrameName
-    document.getElementById("badFrameName").textContent=badFrameItem;
-  }
+  // get all problems
 
-  // nested frame
-  if (event.data.pluginMessage.badDesc === true) {
-		var element = document.getElementById("issue--desc");
-    element.classList.add("show");
-  }
+  var errorWrongFont = event.data.pluginMessage.arrayWrongFont;
+  var errorFontStyle = event.data.pluginMessage.arrayFontStyle
+  var errorDupName = event.data.pluginMessage.arrayUniqueNameCheck;
+  var errorInstance = event.data.pluginMessage.arrayNoInstance;
+  var errorFill = event.data.pluginMessage.arrayFillCheck
 
-  // errors
+  var issueNoDesc = event.data.pluginMessage.arrayDescMissing;
+  var issueNestedFrame = event.data.pluginMessage.arrayFrameCheck;
+  var issueBorderOutside = event.data.pluginMessage.arrayBorderCheck
 
-  // if no instance
 
-  if (event.data.pluginMessage.noFoundInstance === true) {
-		var element = document.getElementById("error--instance");
-    element.classList.add("show");
-  }
+  // excute
 
-  // check bad fonts
-	if (event.data.pluginMessage.badFont === true) {
-		var element = document.getElementById("error--font");
-    element.classList.add("show");
+  checker(
+    errorWrongFont,
+    "<div class='error'>",
+    "<div class='icon icon--type-error'></div>",
+    "Incorrect font in use, ",
+    "error-wrap"
+  );
 
-    var badFontItem = event.data.pluginMessage.badFontType
-    document.getElementById("badFontType").textContent=badFontItem;
-  }
+  checker(
+    errorFontStyle,
+    "<div class='error'>",
+    "<div class='icon icon--break-error'></div>",
+    "Missing global text style on layer ",
+    "error-wrap"
+  );
 
-  // check missing font style
-  if (event.data.pluginMessage.badFontStyle === true) {
-		var element = document.getElementById("error--fontstyle");
-    element.classList.add("show");
+  checker(
+    errorFill,
+    "<div class='error'>",
+    "<div class='icon icon--break-error'></div>",
+    "Missing global fill style on layer ",
+    "error-wrap"
+  );
 
-    var badFontStyleLayer = event.data.pluginMessage.badFontStyleType
-    document.getElementById("badFontStyle").textContent=badFontStyleLayer;
-  }
+  checker(
+    issueNoDesc,
+    "<div class='issue'>",
+    "<div class='icon icon--comment-issue'></div>",
+    "Missing a component ",
+    "issue-wrap"
+  );
 
-  // check missing fill style
+  checker(
+    errorDupName,
+    "<div class='error'>",
+    "<div class='icon icon--component-error'></div>",
+    "Another component found with the name ",
+    "error-wrap"
+  );
 
-  if (event.data.pluginMessage.badFill === true) {
-		var element = document.getElementById("error--fill");
-    element.classList.add("show");
+  checker(
+    errorInstance,
+    "<div class='error'>",
+    "<div class='icon icon--component-error'></div>",
+    "Missing a demo variant of the ",
+    "error-wrap"
+  );
 
-    var badFill = event.data.pluginMessage.badFillLayer
-    document.getElementById("badFillStyle").textContent=badFill;
-  }
+  checker(
+    issueNestedFrame,
+    "<div class='issue'>",
+    "<div class='icon icon--frame-issue'></div>",
+    "Nested frame found, ",
+    "issue-wrap"
+  );
 
-  if (event.data.pluginMessage.badName === true) {
-		var element = document.getElementById("error--name");
-    element.classList.add("show");
+  checker(
+    issueBorderOutside,
+    "<div class='issue'>",
+    "<div class='icon icon--stroke-weight-issue'></div>",
+    "Stroke should be set to 'Outside' on layer ",
+    "issue-wrap"
+  );
 
-    var badName = event.data.pluginMessage.badNameFound
-    document.getElementById("badNameSpan").textContent=badName;
-  }
   
+
+
+
 }
 
-  </script>
+</script>

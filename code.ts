@@ -6,9 +6,18 @@ setTimeout(function(){
     
     let arrayError = []
     let arrayIssue = []
+
+    // error holder arrays
     let arrayMasterComponent = []
     let arrayUniqueName = []
     let arrayWrongFont = []
+    let arrayNoDesc = []
+    let arrayUniqueNameCheck = []
+    let arrayNoInstance = []
+    let arrayFontStyle = []
+    let arrayFrameCheck = []
+    let arrayFillCheck = []
+    let arrayBorderCheck = []
 
     function errorMsg() {
       figma.closePlugin('⚠️ Please select a master component ⚠️');
@@ -28,7 +37,7 @@ setTimeout(function(){
 
           // show UI
   
-          figma.showUI(__html__,{width: 380, height: 550});
+          figma.showUI(__html__,{width: 380, height: 555});
   
           
           // instance checker
@@ -37,8 +46,7 @@ setTimeout(function(){
   
           searchAll.forEach(item => {
             
-            if (item.type === 'INSTANCE' && item.masterComponent === node) {
-              
+            if (item.type === 'INSTANCE' && item.masterComponent === node) { 
               arrayMasterComponent.push(1)
             }
   
@@ -46,7 +54,8 @@ setTimeout(function(){
   
           if (arrayMasterComponent.length === 0) {
             
-            arrayError.push("No instance description")
+            arrayError.push("No instance")
+            arrayNoInstance.push("component")
   
             figma.ui.postMessage({
               'noFoundInstance': true,
@@ -62,7 +71,6 @@ setTimeout(function(){
               
               if(item.name === node.name) {
                 arrayUniqueName.push(item.name)
-  
               }
             }
           })
@@ -72,6 +80,7 @@ setTimeout(function(){
           if (uniqueNameLength >= 2) {
   
             arrayError.push("Duplicate name")
+            arrayUniqueNameCheck.push(node.name)
   
             figma.ui.postMessage({
               'badName': true,
@@ -88,9 +97,9 @@ setTimeout(function(){
           if (descriptionLength === 0) {
   
             arrayIssue.push("No component description")
-  
+            arrayNoDesc.push("description")
+
             figma.ui.postMessage({
-              'badDesc': true,
               'troubleFound': true
             })
           }
@@ -109,8 +118,7 @@ setTimeout(function(){
                     && child.fontName.family != "San Francisco Text" 
                     && child.fontName.family != "SF Pro Text"
                     ) {
-  
-                  
+
                   arrayError.push(child.fontName.family)
                   arrayWrongFont.push(child.fontName.family)
         
@@ -119,17 +127,17 @@ setTimeout(function(){
                     'badFontType': child.fontName.family,
                     'troubleFound': true
                   })
-  
                 }
-  
+
                 // text global style checker
-        
+
                 const hasStyle = child.textStyleId
                 const hasStyleLength = hasStyle.length
         
                 if (hasStyleLength === 0) {
   
                   arrayError.push("Missing global text style: " + child.name)
+                  arrayFontStyle.push(child.name)
         
                   figma.ui.postMessage({
                     'badFontStyle': true,
@@ -146,6 +154,7 @@ setTimeout(function(){
               if (child.type === 'FRAME') {
   
                 arrayIssue.push("Nested Frame: " + child.name)
+                arrayFrameCheck.push(child.name)
   
                 figma.ui.postMessage({
                   'badFrame': true,
@@ -155,44 +164,54 @@ setTimeout(function(){
   
               }
         
-              if (child.type === 'RECTANGLE') {
+              if (
+                  child.type === 'RECTANGLE' || 
+                  child.type === 'ELLIPSE' || 
+                  child.type === 'POLYGON' || 
+                  child.type === 'VECTOR' || 
+                  child.type === 'STAR') 
+                  {
   
-                // fill global style checker
-        
-                const hasStyle = child.fillStyleId
-                const hasStyleLength = hasStyle.length
-        
-                if (hasStyleLength === 0) {
+                    // fill global style checker
+            
+                    const hasStyle = child.fillStyleId
+                    const hasStyleLength = hasStyle.length
+            
+                    if (hasStyleLength === 0) {
+      
+                      arrayError.push("Missing global fill style: " + child.name)
+                      console.log(arrayError)
+                      arrayFillCheck.push(child.name)
+      
+                      figma.ui.postMessage({
+                        'badFill': true,
+                        'badFillLayer': child.name,
+                        'troubleFound': true
+                      }) 
+                    }
   
-                  arrayError.push("Missing global fill style: " + child.name)
-  
-                  figma.ui.postMessage({
-                    'badFill': true,
-                    'badFillLayer': child.name,
-                    'troubleFound': true
-                  }) 
-                }
-  
-                // outside stroke checker
-  
-                const strokeAttached = child.strokes
-                const strokeAttachedLength = strokeAttached.length
-  
-                if (strokeAttachedLength === 1) {
-  
-                  if (child.strokeAlign === 'CENTER' || child.strokeAlign === 'INSIDE') {
-  
-                    arrayIssue.push("Stroke not outside: " + child.name)
-  
-  
-                    figma.ui.postMessage({
-                      'badStroke': true,
-                      'badStrokeLayer': child.name,
-                      'troubleFound': true
-                    }) 
+                    // outside stroke checker
+      
+                    const strokeAttached = child.strokes
+                    const strokeAttachedLength = strokeAttached.length
+      
+                    if (strokeAttachedLength === 1) {
+      
+                      if (child.strokeAlign === 'CENTER' || child.strokeAlign === 'INSIDE') {
+      
+                        arrayIssue.push("Stroke not outside: " + child.name)
+                        arrayBorderCheck.push(child.name)
+      
+                        figma.ui.postMessage({
+                          'badStroke': true,
+                          'badStrokeLayer': child.name,
+                          'troubleFound': true
+                        }) 
+                      }
+                    }
+
                   }
-                }          
-              }
+
               if ("children" in child) componentChildren(child.children)
             })  
           }
@@ -202,14 +221,21 @@ setTimeout(function(){
           const arrayErrorLength = arrayError.length
           const arrayIssueLength = arrayIssue.length
 
-          arrayWrongFont.forEach(element => {
-            // console.log(element);
-          });
+          arrayWrongFont.reverse()
+          arrayFillCheck.reverse()
+          arrayBorderCheck.reverse()
 
           figma.ui.postMessage({
             'errorLength': arrayErrorLength,
             'issueLength': arrayIssueLength,
-            'jsonWrongFont': arrayWrongFont
+            'arrayWrongFont': arrayWrongFont,
+            'arrayDescMissing': arrayNoDesc,
+            'arrayUniqueNameCheck': arrayUniqueNameCheck,
+            'arrayNoInstance': arrayNoInstance,
+            'arrayFontStyle': arrayFontStyle,
+            'arrayFrameCheck': arrayFrameCheck,
+            'arrayFillCheck' :arrayFillCheck,
+            'arrayBorderCheck': arrayBorderCheck
           }) 
 
         } // end if component
