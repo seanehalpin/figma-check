@@ -759,34 +759,38 @@ setTimeout(function(){
 
   window.onmessage = async (event) => {
 
-    const errorArrayContent = event.data.pluginMessage.errorArray;
+    var issuedFont = event.data.pluginMessage.jsonWrongFont;
 
-    const errorArrayUi = [];
+    function checker(checkIssue,checkStart,checkIcon,checkMessage,checkId) {
 
-    errorArrayUi.push(errorArrayContent);
+      if (checkIssue !== undefined) {
 
-    if (errorArrayUi.length != 0 ) {
+        var logged = checkIssue;
 
-      errorArrayUi.forEach(function(item) {
-          
-        let htmlStart = "<div class='error show'><div class='icon icon--type-error'></div>Incorrect font in use,"
-        let htmlVar = item
-        let htmlEnd = "</div>"
-        let htmlAll = htmlStart + htmlVar + htmlEnd
-        console.log(htmlAll)
+        logged.forEach(element => {
+          var start = checkStart;
+          var icon = checkIcon;
+          var message = checkMessage;
+          var variable = element;
+          var end = "</div>";
+          var all = start + icon + message + variable + end;
 
-        var z = document.createElement('div');
+          var z = document.createElement('div');
+          z.innerHTML = all;
 
-        z.innerHTML = htmlAll
+          document.getElementById(checkId).appendChild(z);
+        });
+      }
+    }
 
-        document.getElementById("error-wrap").appendChild(z);
-
-      });
-    };
-  
-      
-
-
+    checker(
+      issuedFont,
+      "<div class='error show'>",
+      "<div class='icon icon--type-error'></div>",
+      "Incorrect font in use, ",
+      "error-wrap"
+    )
+    
     
 
 

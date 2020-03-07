@@ -1,30 +1,27 @@
 setTimeout(function () {
     function runPlugin() {
-        const nodes = figma.currentPage.selection;
-        let selectedLayers = nodes;
-        let nodesParent = nodes;
-        let troubleFound = false;
+        let nodes = figma.currentPage.selection;
         let arrayError = [];
         let arrayIssue = [];
         let arrayMasterComponent = [];
         let arrayUniqueName = [];
+        let arrayWrongFont = [];
         function errorMsg() {
             figma.closePlugin('⚠️ Please select a master component ⚠️');
         }
-        if (selectedLayers.length === 0) {
+        if (nodes.length === 0) {
             // nothing selected, show error
             errorMsg();
         }
         else {
-            nodesParent.forEach(mainParent => {
-                // make sure its a component we are checking
-                if (mainParent.type === 'COMPONENT') {
+            for (const node of nodes) {
+                if (node.type === 'COMPONENT') {
                     // show UI
                     figma.showUI(__html__, { width: 380, height: 550 });
                     // instance checker
                     const searchAll = figma.root.findAll();
                     searchAll.forEach(item => {
-                        if (item.type === 'INSTANCE' && item.masterComponent === mainParent) {
+                        if (item.type === 'INSTANCE' && item.masterComponent === node) {
                             arrayMasterComponent.push(1);
                         }
                     });
@@ -35,31 +32,25 @@ setTimeout(function () {
                             'troubleFound': true
                         });
                     }
-                    else {
-                        // console.log("has instance")
-                    }
                     // unique name checker
                     searchAll.forEach(item => {
                         if (item.type === 'COMPONENT') {
-                            if (item.name === mainParent.name) {
-                                // console.log("component found: " + item.name)
+                            if (item.name === node.name) {
                                 arrayUniqueName.push(item.name);
                             }
                         }
                     });
-                    // console.log(arrayUniqueName.length)
                     const uniqueNameLength = arrayUniqueName.length;
                     if (uniqueNameLength >= 2) {
-                        // console.log("Theres more than 1")
                         arrayError.push("Duplicate name");
                         figma.ui.postMessage({
                             'badName': true,
-                            'badNameFound': mainParent.name,
+                            'badNameFound': node.name,
                             'troubleFound': true
                         });
                     }
                     // component desc checker
-                    const descriptionLength = mainParent.description.length;
+                    const descriptionLength = node.description.length;
                     if (descriptionLength === 0) {
                         arrayIssue.push("No component description");
                         figma.ui.postMessage({
@@ -77,6 +68,7 @@ setTimeout(function () {
                                     && child.fontName.family != "San Francisco Text"
                                     && child.fontName.family != "SF Pro Text") {
                                     arrayError.push(child.fontName.family);
+                                    arrayWrongFont.push(child.fontName.family);
                                     figma.ui.postMessage({
                                         'badFont': true,
                                         'badFontType': child.fontName.family,
@@ -128,17 +120,6 @@ setTimeout(function () {
                                             'troubleFound': true
                                         });
                                     }
-                                    // // border global style checker
-                                    // const hasBorderStyle = child.strokeStyleId
-                                    // const hasBorderStyleLength = hasBorderStyle.length
-                                    // if (hasBorderStyleLength === 0) {
-                                    //   arrayIssue.push("Missing global border style: " + child.name)
-                                    //   figma.ui.postMessage({
-                                    //     'badBorderFill': true,
-                                    //     'badBorderFillLayer': child.name,
-                                    //     'troubleFound': true
-                                    //   }) 
-                                    // }
                                 }
                             }
                             if ("children" in child)
@@ -146,21 +127,18 @@ setTimeout(function () {
                         });
                     }
                     componentChildren(nodes);
-                    // console.log(arrayError)
-                    // console.log(arrayIssue)
                     const arrayErrorLength = arrayError.length;
                     const arrayIssueLength = arrayIssue.length;
+                    arrayWrongFont.forEach(element => {
+                        // console.log(element);
+                    });
                     figma.ui.postMessage({
                         'errorLength': arrayErrorLength,
-                        'errorArray': arrayError,
-                        'issueLength': arrayIssueLength
+                        'issueLength': arrayIssueLength,
+                        'jsonWrongFont': arrayWrongFont
                     });
                 } // end if component
-                // throw error if isnt a component
-                else {
-                    errorMsg();
-                }
-            });
+            } // end loop through
         } // end else
     } // end function
     runPlugin();
