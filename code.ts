@@ -18,9 +18,21 @@ setTimeout(function(){
     let arrayFrameCheck = []
     let arrayFillCheck = []
     let arrayBorderCheck = []
+    let arrayHidden = []
+    let arrayShadow = []
+    let arrayStrokeGrey = []
+    let arrayStrokeTwo = []
+
+    let arrayNodeParents = []
+    let arrayFoundStoryBook = []
+    let arrayStorykBookNameMissing = []
 
     function errorMsg() {
-      figma.closePlugin('⚠️ Please select a master component ⚠️');
+      // figma.closePlugin('⚠️ Please select a master component ⚠️');
+      figma.showUI(__html__,{width: 380, height: 535});
+      figma.ui.postMessage({
+        'noComponent': true
+      })
     }
 
     if (nodes.length === 0) {
@@ -34,11 +46,9 @@ setTimeout(function(){
       for (const node of nodes) {
 
         if (node.type === 'COMPONENT') {
-
           // show UI
   
-          figma.showUI(__html__,{width: 380, height: 555});
-  
+          figma.showUI(__html__,{width: 380, height: 535});
           
           // instance checker
   
@@ -49,7 +59,6 @@ setTimeout(function(){
             if (item.type === 'INSTANCE' && item.masterComponent === node) { 
               arrayMasterComponent.push(1)
             }
-  
           })
   
           if (arrayMasterComponent.length === 0) {
@@ -59,6 +68,41 @@ setTimeout(function(){
   
             figma.ui.postMessage({
               'noFoundInstance': true,
+              'troubleFound': true
+            })
+          }
+
+          // check what the parent frame is
+
+          const frameParent = node.parent
+
+          if (frameParent.type === 'GROUP') {
+            const groupParent = frameParent.parent
+
+          } else {
+
+            arrayNodeParents.push(frameParent)
+
+            arrayNodeParents.forEach(element => {
+
+              element.children.forEach(child => {
+                
+                if(child.name === "StoryBook Name"){
+                  // console.log("found storybook name")
+                  arrayFoundStoryBook.push(1)
+                }
+              })
+            })
+            
+          }
+
+          // console.log(arrayFoundStoryBook.length)
+
+          if(arrayFoundStoryBook.length === 0) {
+
+            arrayError.push("Missing Storybook Name")
+            arrayStorykBookNameMissing.push("missing")
+            figma.ui.postMessage({
               'troubleFound': true
             })
           }
@@ -83,12 +127,9 @@ setTimeout(function(){
             arrayUniqueNameCheck.push(node.name)
   
             figma.ui.postMessage({
-              'badName': true,
-              'badNameFound': node.name,
               'troubleFound': true
             })
           }
-  
   
           // component desc checker
   
@@ -123,8 +164,6 @@ setTimeout(function(){
                   arrayWrongFont.push(child.fontName.family)
         
                   figma.ui.postMessage({
-                    'badFont': true,
-                    'badFontType': child.fontName.family,
                     'troubleFound': true
                   })
                 }
@@ -140,13 +179,25 @@ setTimeout(function(){
                   arrayFontStyle.push(child.name)
         
                   figma.ui.postMessage({
-                    'badFontStyle': true,
-                    'badFontStyleType': child.name,
                     'troubleFound': true
                   })
   
                 }
         
+              }
+
+              // lorem checker
+
+              if(child.type === 'TEXT') {
+                // console.log("text")
+                if(
+                  child.chararcters === 'Lorem' || 
+                  child.chararcters === 'Lorem' || 
+                  child.chararcters === 'ipsum' || 
+                  child.chararcters === 'Lorem ipsum'
+                  ){
+                    console.log("lorem ipsum found")
+                }
               }
   
               // frame checker
@@ -157,8 +208,6 @@ setTimeout(function(){
                 arrayFrameCheck.push(child.name)
   
                 figma.ui.postMessage({
-                  'badFrame': true,
-                  'badFrameName': child.name,
                   'troubleFound': true
                 }) 
   
@@ -180,22 +229,22 @@ setTimeout(function(){
                     if (hasStyleLength === 0) {
       
                       arrayError.push("Missing global fill style: " + child.name)
-                      console.log(arrayError)
                       arrayFillCheck.push(child.name)
       
                       figma.ui.postMessage({
-                        'badFill': true,
-                        'badFillLayer': child.name,
                         'troubleFound': true
                       }) 
                     }
   
-                    // outside stroke checker
+                    //  stroke checkers
       
                     const strokeAttached = child.strokes
                     const strokeAttachedLength = strokeAttached.length
+
       
                     if (strokeAttachedLength === 1) {
+
+                      // outside stroke checker
       
                       if (child.strokeAlign === 'CENTER' || child.strokeAlign === 'INSIDE') {
       
@@ -203,14 +252,76 @@ setTimeout(function(){
                         arrayBorderCheck.push(child.name)
       
                         figma.ui.postMessage({
-                          'badStroke': true,
-                          'badStrokeLayer': child.name,
                           'troubleFound': true
                         }) 
                       }
+
+                      // style grey 600 1px checker
+
+                      if(child.strokeWeight === 1) {
+                        if (child.strokeStyleId !== 'S:c05320048b3a7741141210c055090c0aa4499e1b,874:20') {
+                          
+                          arrayIssue.push("stroke not grey 600: " + child.name)
+                          arrayStrokeGrey.push(child.name)
+
+                          figma.ui.postMessage({
+                            'troubleFound': true
+                          }) 
+                        }
+                      }
+
+                      // style 2px checker
+
+                      if(child.strokeWeight === 2) {
+                        if (
+                          child.strokeStyleId !== 'S:c05320048b3a7741141210c055090c0aa4499e1b,874:20' || 
+                          child.strokeStyleId !== 'S:1e185f3fefaee1d886726255a6e2275edd35df85,32:23' || 
+                          child.strokeStyleId !== 'S:710b40726a4ac51bcfb30d733c9b25a887ffdc92,874:13'
+                          ){
+                            arrayIssue.push("2px stroke not right: " + child.name)
+                            arrayStrokeTwo.push(child.name)
+                            // console.log("2px stroke wrong " + child.name)
+
+                            figma.ui.postMessage({
+                              'troubleFound': true
+                            }) 
+                          }
+                      }
+
                     }
 
-                  }
+                      // text global style checker
+
+                      const hasEffects = child.effects
+                      const hasEffectsLength = hasEffects.length
+                      const hasEffectsId = child.effectStyleId
+                      const hasEffectsIdLength = hasEffectsId.length
+              
+                      if (hasEffectsLength !== 0) {
+                        
+                        if (hasEffectsIdLength === 0) {
+                          arrayIssue.push(child.name)
+                          arrayShadow.push(child.name)
+
+                           figma.ui.postMessage({
+                          'troubleFound': true
+                        })
+                        }
+                      }
+
+              }
+
+              // hidden layer checker
+
+              if (child.visible !== true || child.opacity === 0) {
+
+                arrayHidden.push(child.name)
+                arrayIssue.push(child.name)
+
+                figma.ui.postMessage({
+                  'troubleFound': true
+                }) 
+              }
 
               if ("children" in child) componentChildren(child.children)
             })  
@@ -224,6 +335,11 @@ setTimeout(function(){
           arrayWrongFont.reverse()
           arrayFillCheck.reverse()
           arrayBorderCheck.reverse()
+          arrayHidden.reverse()
+          arrayFontStyle.reverse()
+          arrayShadow.reverse()
+          arrayStrokeGrey.reverse()
+          arrayStrokeTwo.reverse()
 
           figma.ui.postMessage({
             'errorLength': arrayErrorLength,
@@ -235,12 +351,20 @@ setTimeout(function(){
             'arrayFontStyle': arrayFontStyle,
             'arrayFrameCheck': arrayFrameCheck,
             'arrayFillCheck' :arrayFillCheck,
-            'arrayBorderCheck': arrayBorderCheck
+            'arrayBorderCheck': arrayBorderCheck,
+            'arrayHidden': arrayHidden,
+            'arrayShadow': arrayShadow,
+            'arrayStrokeGrey': arrayStrokeGrey,
+            'arrayStrokeTwo': arrayStrokeTwo,
+            'arrayStorykBookNameMissing': arrayStorykBookNameMissing
           }) 
+
+        } else {
+          errorMsg()
 
         } // end if component
 
-    } // end loop through
+    } // end for
       
 
     } // end else
