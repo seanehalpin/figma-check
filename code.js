@@ -175,12 +175,16 @@ setTimeout(function () {
                                     // fill global style checker
                                     const hasStyle = child.fillStyleId;
                                     const hasStyleLength = hasStyle.length;
+                                    const hasFills = child.fills;
+                                    const hasFillsLength = hasFills.length;
                                     if (hasStyleLength === 0) {
-                                        arrayError.push("Missing global fill style: " + child.name);
-                                        arrayFillCheck.push(child.name);
-                                        figma.ui.postMessage({
-                                            'troubleFound': true
-                                        });
+                                        if (hasFillsLength !== 0) {
+                                            arrayError.push("Missing global fill style: " + child.name);
+                                            arrayFillCheck.push(child.name);
+                                            figma.ui.postMessage({
+                                                'troubleFound': true
+                                            });
+                                        }
                                     }
                                     //  stroke checkers
                                     const strokeAttached = child.strokes;
@@ -206,9 +210,10 @@ setTimeout(function () {
                                         }
                                         // style 2px checker
                                         if (child.strokeWeight === 2) {
-                                            if (child.strokeStyleId !== 'S:eeccee1f35c1a51c6f83db293c745e39361d66f5,5:52' ||
-                                                child.strokeStyleId !== 'S:1e185f3fefaee1d886726255a6e2275edd35df85,32:23' ||
-                                                child.strokeStyleId !== 'S:710b40726a4ac51bcfb30d733c9b25a887ffdc92,874:13') {
+                                            if (child.strokeStyleId !== "S:eeccee1f35c1a51c6f83db293c745e39361d66f5,5:52" &&
+                                                child.strokeStyleId !== "S:1e185f3fefaee1d886726255a6e2275edd35df85,32:23" &&
+                                                child.strokeStyleId !== "S:710b40726a4ac51bcfb30d733c9b25a887ffdc92,874:13") {
+                                                console.log(child.strokeStyleId);
                                                 arrayIssue.push("2px stroke not right: " + child.name);
                                                 arrayStrokeTwo.push(child.name);
                                                 // console.log("2px stroke wrong " + child.name)
