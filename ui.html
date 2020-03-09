@@ -547,6 +547,7 @@ setTimeout(function(){
   var errorInstance = event.data.pluginMessage.arrayNoInstance;
   var errorFill = event.data.pluginMessage.arrayFillCheck
   var errorStoryBook = event.data.pluginMessage.arrayStorykBookNameMissing
+  var errorStoryBookAvatar = event.data.pluginMessage.arrayStoryAvatar
 
   var issueNoDesc = event.data.pluginMessage.arrayDescMissing;
   var issueNestedFrame = event.data.pluginMessage.arrayFrameCheck;
@@ -602,7 +603,15 @@ setTimeout(function(){
     errorStoryBook,
     "<div class='error'>",
     "<div class='icon icon--component-error'></div>",
-    "StoryBook name component is ",
+    "'StoryBook Name' component is ",
+    "error-wrap"
+  );
+
+  checker(
+    errorStoryBookAvatar,
+    "<div class='error'>",
+    "<div class='icon icon--component-error'></div>",
+    "'StoryBook Name' avatar is ",
     "error-wrap"
   );
 

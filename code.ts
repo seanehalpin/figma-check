@@ -26,9 +26,9 @@ setTimeout(function(){
     let arrayNodeParents = []
     let arrayFoundStoryBook = []
     let arrayStorykBookNameMissing = []
+    let arrayStoryAvatar = []
 
     function errorMsg() {
-      // figma.closePlugin('⚠️ Please select a master component ⚠️');
       figma.showUI(__html__,{width: 380, height: 535});
       figma.ui.postMessage({
         'noComponent': true
@@ -76,23 +76,42 @@ setTimeout(function(){
 
           const frameParent = node.parent
 
-          if (frameParent.type === 'GROUP') {
-            const groupParent = frameParent.parent
-
-          } else {
-
-            arrayNodeParents.push(frameParent)
+          function storyBookCheck(item) {
+            
+            arrayNodeParents.push(item)
 
             arrayNodeParents.forEach(element => {
 
               element.children.forEach(child => {
-                
+
                 if(child.name === "StoryBook Name"){
-                  // console.log("found storybook name")
                   arrayFoundStoryBook.push(1)
+
+                  child.children.forEach(granchild => {
+                    if(granchild.name === 'Avatar' && granchild.visible !== true) {
+
+                      arrayError.push("Missing Avatar")
+                      arrayStoryAvatar.push("missing")
+
+                      figma.ui.postMessage({
+                        'troubleFound': true
+                      })
+                    }
+                  });
                 }
               })
             })
+          }
+
+          if (frameParent.type === 'GROUP') {
+            
+            const groupParent = frameParent.parent
+            
+            storyBookCheck(groupParent)
+
+          } else {
+
+            storyBookCheck(frameParent)
             
           }
 
@@ -202,10 +221,11 @@ setTimeout(function(){
   
               // frame checker
         
-              if (child.type === 'FRAME') {
+              if (child.type === 'FRAME' && child.layoutMode === 'NONE') {
   
                 arrayIssue.push("Nested Frame: " + child.name)
                 arrayFrameCheck.push(child.name)
+                console.log(child.layoutMode)
   
                 figma.ui.postMessage({
                   'troubleFound': true
@@ -356,7 +376,8 @@ setTimeout(function(){
             'arrayShadow': arrayShadow,
             'arrayStrokeGrey': arrayStrokeGrey,
             'arrayStrokeTwo': arrayStrokeTwo,
-            'arrayStorykBookNameMissing': arrayStorykBookNameMissing
+            'arrayStorykBookNameMissing': arrayStorykBookNameMissing,
+            'arrayStoryAvatar': arrayStoryAvatar
           }) 
 
         } else {
@@ -371,7 +392,6 @@ setTimeout(function(){
   } // end function
 
   runPlugin()
-
 
   figma.ui.onmessage = msg => {
 
