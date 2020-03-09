@@ -22,6 +22,7 @@ setTimeout(function(){
     let arrayShadow = []
     let arrayStrokeGrey = []
     let arrayStrokeTwo = []
+    let arrayFontStyleMixed = []
 
     let arrayNodeParents = []
     let arrayFoundStoryBook = []
@@ -168,7 +169,7 @@ setTimeout(function(){
         
             children.forEach(child => {
           
-              if (child.type === 'TEXT') {
+              if (child.type === 'TEXT' && child.fontName !== figma.mixed) {
   
                 // font family checker
                 
@@ -176,7 +177,7 @@ setTimeout(function(){
                     && child.fontName.family != "Aktiv Grotesk" 
                     && child.fontName.family != "San Francisco" 
                     && child.fontName.family != "San Francisco Text" 
-                    && child.fontName.family != "SF Pro Text"
+                    && child.fontName.family != "SF Pro Text" 
                     ) {
 
                   arrayError.push(child.fontName.family)
@@ -202,7 +203,16 @@ setTimeout(function(){
                   })
   
                 }
-        
+              }
+
+              if (child.type === 'TEXT' && child.fontName === figma.mixed) {
+
+                arrayError.push("Font styles are mixed on layer " + child.name)
+                arrayFontStyleMixed.push(child.name)
+
+                figma.ui.postMessage({
+                  'troubleFound': true
+                })
               }
 
               // lorem checker
@@ -238,97 +248,102 @@ setTimeout(function(){
                   child.type === 'ELLIPSE' || 
                   child.type === 'POLYGON' || 
                   child.type === 'VECTOR' || 
-                  child.type === 'STAR') 
+                  child.type === 'STAR')
                   {
-  
-                    // fill global style checker
+
+                    if (child.name !== "Vector"){
+
+                        // fill global style checker
             
-                    const hasStyle = child.fillStyleId
-                    const hasStyleLength = hasStyle.length
-            
-                    if (hasStyleLength === 0) {
-      
-                      arrayError.push("Missing global fill style: " + child.name)
-                      arrayFillCheck.push(child.name)
-      
-                      figma.ui.postMessage({
-                        'troubleFound': true
-                      }) 
-                    }
-  
-                    //  stroke checkers
-      
-                    const strokeAttached = child.strokes
-                    const strokeAttachedLength = strokeAttached.length
-
-      
-                    if (strokeAttachedLength === 1) {
-
-                      // outside stroke checker
-      
-                      if (child.strokeAlign === 'CENTER' || child.strokeAlign === 'INSIDE') {
-      
-                        arrayIssue.push("Stroke not outside: " + child.name)
-                        arrayBorderCheck.push(child.name)
-      
-                        figma.ui.postMessage({
-                          'troubleFound': true
-                        }) 
-                      }
-
-                      // style grey 600 1px checker
-
-                      if(child.strokeWeight === 1) {
-                        if (child.strokeStyleId !== 'S:c05320048b3a7741141210c055090c0aa4499e1b,874:20') {
-                          
-                          arrayIssue.push("stroke not grey 600: " + child.name)
-                          arrayStrokeGrey.push(child.name)
-
+                        const hasStyle = child.fillStyleId
+                        const hasStyleLength = hasStyle.length
+                
+                        if (hasStyleLength === 0) {
+          
+                          arrayError.push("Missing global fill style: " + child.name)
+                          arrayFillCheck.push(child.name)
+          
                           figma.ui.postMessage({
                             'troubleFound': true
                           }) 
                         }
-                      }
+      
+                        //  stroke checkers
+          
+                        const strokeAttached = child.strokes
+                        const strokeAttachedLength = strokeAttached.length
 
-                      // style 2px checker
+          
+                        if (strokeAttachedLength === 1) {
 
-                      if(child.strokeWeight === 2) {
-                        if (
-                          child.strokeStyleId !== 'S:c05320048b3a7741141210c055090c0aa4499e1b,874:20' || 
-                          child.strokeStyleId !== 'S:1e185f3fefaee1d886726255a6e2275edd35df85,32:23' || 
-                          child.strokeStyleId !== 'S:710b40726a4ac51bcfb30d733c9b25a887ffdc92,874:13'
-                          ){
-                            arrayIssue.push("2px stroke not right: " + child.name)
-                            arrayStrokeTwo.push(child.name)
-                            // console.log("2px stroke wrong " + child.name)
-
+                          // outside stroke checker
+          
+                          if (child.strokeAlign === 'CENTER' || child.strokeAlign === 'INSIDE') {
+          
+                            arrayIssue.push("Stroke not outside: " + child.name)
+                            arrayBorderCheck.push(child.name)
+          
                             figma.ui.postMessage({
                               'troubleFound': true
                             }) 
                           }
-                      }
 
-                    }
+                          // style grey 600 1px checker
 
-                      // text global style checker
+                          if(child.strokeWeight === 1) {
+                            if (child.strokeStyleId !== 'S:c05320048b3a7741141210c055090c0aa4499e1b,874:20') {
+                              
+                              arrayIssue.push("stroke not grey 600: " + child.name)
+                              arrayStrokeGrey.push(child.name)
 
-                      const hasEffects = child.effects
-                      const hasEffectsLength = hasEffects.length
-                      const hasEffectsId = child.effectStyleId
-                      const hasEffectsIdLength = hasEffectsId.length
-              
-                      if (hasEffectsLength !== 0) {
-                        
-                        if (hasEffectsIdLength === 0) {
-                          arrayIssue.push(child.name)
-                          arrayShadow.push(child.name)
+                              figma.ui.postMessage({
+                                'troubleFound': true
+                              }) 
+                            }
+                          }
 
-                           figma.ui.postMessage({
-                          'troubleFound': true
-                        })
+                          // style 2px checker
+                          
+
+                          if(child.strokeWeight === 2) {
+                            if (
+                              child.strokeStyleId !== 'S:eeccee1f35c1a51c6f83db293c745e39361d66f5,5:52' || 
+                              child.strokeStyleId !== 'S:1e185f3fefaee1d886726255a6e2275edd35df85,32:23' || 
+                              child.strokeStyleId !== 'S:710b40726a4ac51bcfb30d733c9b25a887ffdc92,874:13'
+                              ){
+                                arrayIssue.push("2px stroke not right: " + child.name)
+                                arrayStrokeTwo.push(child.name)
+                                // console.log("2px stroke wrong " + child.name)
+
+                                figma.ui.postMessage({
+                                  'troubleFound': true
+                                }) 
+                              }
+                          }
+
                         }
-                      }
 
+                          // text global style checker
+
+                          const hasEffects = child.effects
+                          const hasEffectsLength = hasEffects.length
+                          const hasEffectsId = child.effectStyleId
+                          const hasEffectsIdLength = hasEffectsId.length
+                  
+                          if (hasEffectsLength !== 0) {
+                            
+                            if (hasEffectsIdLength === 0) {
+                              arrayIssue.push(child.name)
+                              arrayShadow.push(child.name)
+
+                              figma.ui.postMessage({
+                              'troubleFound': true
+                            })
+                            }
+                          }
+
+                        }
+  
               }
 
               // hidden layer checker
@@ -343,7 +358,7 @@ setTimeout(function(){
                 }) 
               }
 
-              if ("children" in child) componentChildren(child.children)
+              if ("children" in child && child.type !== "BOOLEAN_OPERATION") componentChildren(child.children)
             })  
           }
 
@@ -360,6 +375,7 @@ setTimeout(function(){
           arrayShadow.reverse()
           arrayStrokeGrey.reverse()
           arrayStrokeTwo.reverse()
+          arrayFontStyleMixed.reverse()
 
           figma.ui.postMessage({
             'errorLength': arrayErrorLength,
@@ -377,7 +393,8 @@ setTimeout(function(){
             'arrayStrokeGrey': arrayStrokeGrey,
             'arrayStrokeTwo': arrayStrokeTwo,
             'arrayStorykBookNameMissing': arrayStorykBookNameMissing,
-            'arrayStoryAvatar': arrayStoryAvatar
+            'arrayStoryAvatar': arrayStoryAvatar,
+            'arrayFontStyleMixed': arrayFontStyleMixed
           }) 
 
         } else {

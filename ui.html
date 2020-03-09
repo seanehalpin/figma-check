@@ -514,7 +514,8 @@ setTimeout(function(){
   // get all problems
 
   var errorWrongFont = event.data.pluginMessage.arrayWrongFont;
-  var errorFontStyle = event.data.pluginMessage.arrayFontStyle
+  var errorFontStyle = event.data.pluginMessage.arrayFontStyle;
+  var arrayFontStyleMixed =  event.data.pluginMessage.arrayFontStyleMixed;
   var errorDupName = event.data.pluginMessage.arrayUniqueNameCheck;
   var errorInstance = event.data.pluginMessage.arrayNoInstance;
   var errorFill = event.data.pluginMessage.arrayFillCheck
@@ -536,6 +537,14 @@ setTimeout(function(){
     "<div class='error'>",
     "<div class='icon icon--type-error'></div>",
     "Incorrect font in use, ",
+    "error-wrap"
+  );
+
+  checker(
+    arrayFontStyleMixed,
+    "<div class='error'>",
+    "<div class='icon icon--break-error'></div>",
+    "Mixed fonts found on layer ",
     "error-wrap"
   );
 
