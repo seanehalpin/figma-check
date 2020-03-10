@@ -1,14 +1,13 @@
 setTimeout(function () {
     function runPlugin() {
         let nodes = figma.currentPage.selection;
+        let frames = figma.currentPage.children.filter((node) => node.type === 'FRAME');
         let arrayError = [];
         let arrayIssue = [];
         // error holder arrays
         let arrayMasterComponent = [];
-        let arrayUniqueName = [];
         let arrayWrongFont = [];
         let arrayNoDesc = [];
-        let arrayUniqueNameCheck = [];
         let arrayNoInstance = [];
         let arrayFontStyle = [];
         let arrayFrameCheck = [];
@@ -19,10 +18,15 @@ setTimeout(function () {
         let arrayStrokeGrey = [];
         let arrayStrokeTwo = [];
         let arrayFontStyleMixed = [];
+        let arrayUniqueName = [];
+        let arrayFrameDup = [];
         let arrayNodeParents = [];
         let arrayFoundStoryBook = [];
         let arrayStorykBookNameMissing = [];
         let arrayStoryAvatar = [];
+        function checkIfArrayIsUnique(myArray) {
+            return myArray.length === new Set(myArray).size;
+        }
         function errorMsg() {
             figma.showUI(__html__, { width: 380, height: 535 });
             figma.ui.postMessage({
@@ -34,10 +38,23 @@ setTimeout(function () {
             errorMsg();
         }
         else {
+            for (const frame of frames) {
+                arrayUniqueName.push(frame.name);
+            }
             for (const node of nodes) {
                 if (node.type === 'COMPONENT') {
                     // show UI
                     figma.showUI(__html__, { width: 380, height: 535 });
+                    // Dup frame checker
+                    let UniqueFrame = checkIfArrayIsUnique(arrayUniqueName);
+                    console.log(UniqueFrame);
+                    if (UniqueFrame === false) {
+                        arrayError.push("Dupe frame name");
+                        arrayFrameDup.push("found");
+                        figma.ui.postMessage({
+                            'troubleFound': true
+                        });
+                    }
                     // instance checker
                     const searchAll = figma.root.findAll();
                     searchAll.forEach(item => {
@@ -89,22 +106,6 @@ setTimeout(function () {
                             'troubleFound': true
                         });
                     }
-                    // unique name checker
-                    searchAll.forEach(item => {
-                        if (item.type === 'COMPONENT') {
-                            if (item.name === node.name) {
-                                arrayUniqueName.push(item.name);
-                            }
-                        }
-                    });
-                    const uniqueNameLength = arrayUniqueName.length;
-                    if (uniqueNameLength >= 2) {
-                        arrayError.push("Duplicate name");
-                        arrayUniqueNameCheck.push(node.name);
-                        figma.ui.postMessage({
-                            'troubleFound': true
-                        });
-                    }
                     // component desc checker
                     const descriptionLength = node.description.length;
                     if (descriptionLength === 0) {
@@ -133,7 +134,7 @@ setTimeout(function () {
                                 const hasStyle = child.textStyleId;
                                 const hasStyleLength = hasStyle.length;
                                 if (hasStyleLength === 0) {
-                                    arrayError.push("Missing global text style: " + child.name);
+                                    arrayIssue.push("Missing global text style: " + child.name);
                                     arrayFontStyle.push(child.name);
                                     figma.ui.postMessage({
                                         'troubleFound': true
@@ -146,16 +147,6 @@ setTimeout(function () {
                                 figma.ui.postMessage({
                                     'troubleFound': true
                                 });
-                            }
-                            // lorem checker
-                            if (child.type === 'TEXT') {
-                                // console.log("text")
-                                if (child.chararcters === 'Lorem' ||
-                                    child.chararcters === 'Lorem' ||
-                                    child.chararcters === 'ipsum' ||
-                                    child.chararcters === 'Lorem ipsum') {
-                                    console.log("lorem ipsum found");
-                                }
                             }
                             // frame checker
                             if (child.type === 'FRAME' && child.layoutMode === 'NONE') {
@@ -268,7 +259,6 @@ setTimeout(function () {
                         'issueLength': arrayIssueLength,
                         'arrayWrongFont': arrayWrongFont,
                         'arrayDescMissing': arrayNoDesc,
-                        'arrayUniqueNameCheck': arrayUniqueNameCheck,
                         'arrayNoInstance': arrayNoInstance,
                         'arrayFontStyle': arrayFontStyle,
                         'arrayFrameCheck': arrayFrameCheck,
@@ -280,7 +270,8 @@ setTimeout(function () {
                         'arrayStrokeTwo': arrayStrokeTwo,
                         'arrayStorykBookNameMissing': arrayStorykBookNameMissing,
                         'arrayStoryAvatar': arrayStoryAvatar,
-                        'arrayFontStyleMixed': arrayFontStyleMixed
+                        'arrayFontStyleMixed': arrayFontStyleMixed,
+                        'arrayFrameDup': arrayFrameDup
                     });
                 }
                 else {
