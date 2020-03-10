@@ -4,16 +4,20 @@ setTimeout(function(){
   function runPlugin() {  
 
     let nodes = figma.currentPage.selection
-
     let frames = figma.currentPage.children.filter((node) => node.type === 'FRAME') as FrameNode[]
+
+    // error type holders
     
     let arrayError = []
     let arrayIssue = []
 
     // error holder arrays
+
     let arrayMasterComponent = []
+    let arrayUniqueName = []
     let arrayWrongFont = []
     let arrayNoDesc = []
+    let arrayUniqueNameCheck = []
     let arrayNoInstance = []
     let arrayFontStyle = []
     let arrayFrameCheck = []
@@ -24,9 +28,9 @@ setTimeout(function(){
     let arrayStrokeGrey = []
     let arrayStrokeTwo = []
     let arrayFontStyleMixed = []
-    let arrayUniqueName = []
+    let arrayUniqueFrameName = []
     let arrayFrameDup = []
-
+    let arrayIpsumFound = []
     let arrayNodeParents = []
     let arrayFoundStoryBook = []
     let arrayStorykBookNameMissing = []
@@ -52,7 +56,7 @@ setTimeout(function(){
     } else {
 
       for (const frame of frames) {
-        arrayUniqueName.push(frame.name)
+        arrayUniqueFrameName.push(frame.name)
       }
 
       for (const node of nodes) {
@@ -62,11 +66,10 @@ setTimeout(function(){
   
           figma.showUI(__html__,{width: 380, height: 535});
 
-
           // Dup frame checker
-
-          let UniqueFrame = checkIfArrayIsUnique(arrayUniqueName)
-          console.log(UniqueFrame)
+  
+          let UniqueFrame = checkIfArrayIsUnique(arrayUniqueFrameName)
+          // console.log(UniqueFrame)
 
           if (UniqueFrame === false) {
             arrayError.push("Dupe frame name")
@@ -75,6 +78,7 @@ setTimeout(function(){
               'troubleFound': true
             })
           }
+
           
           // instance checker
   
@@ -110,11 +114,11 @@ setTimeout(function(){
 
               element.children.forEach(child => {
 
-                if(child.name === "StoryBook Name"){
+                if (child.name === "StoryBook Name"){
                   arrayFoundStoryBook.push(1)
 
                   child.children.forEach(granchild => {
-                    if(granchild.name === 'Avatar' && granchild.visible !== true) {
+                    if (granchild.name === 'Avatar' && granchild.visible !== true) {
 
                       arrayError.push("Missing Avatar")
                       arrayStoryAvatar.push("missing")
@@ -151,6 +155,30 @@ setTimeout(function(){
               'troubleFound': true
             })
           }
+  
+          // unique name checker
+  
+          // searchAll.forEach(item => {
+            
+          //   if (item.type === 'COMPONENT') {
+              
+          //     if(item.name === node.name) {
+          //       arrayUniqueName.push(item.name)
+          //     }
+          //   }
+          // })
+  
+          // const uniqueNameLength = arrayUniqueName.length
+  
+          // if (uniqueNameLength >= 2) {
+  
+          //   arrayError.push("Duplicate name")
+          //   arrayUniqueNameCheck.push(node.name)
+  
+          //   figma.ui.postMessage({
+          //     'troubleFound': true
+          //   })
+          // }
   
           // component desc checker
   
@@ -215,6 +243,24 @@ setTimeout(function(){
                   'troubleFound': true
                 })
               }
+
+              // lorem checker
+
+              let arrayLorem = []
+              let loremText = "ipsum"
+              if (child.type === 'TEXT'){
+                arrayLorem.push(child.characters)
+                JSON.stringify(arrayLorem)
+                let joined = arrayLorem.join()
+                // console.log(joined)
+                if (joined.indexOf(loremText) !== -1){
+
+                  arrayIpsumFound.push("found")
+                  figma.ui.postMessage({
+                    'troubleFound': true
+                  })
+                }
+              }
   
               // frame checker
         
@@ -222,7 +268,7 @@ setTimeout(function(){
   
                 arrayIssue.push("Nested Frame: " + child.name)
                 arrayFrameCheck.push(child.name)
-                console.log(child.layoutMode)
+                // console.log(child.layoutMode)
   
                 figma.ui.postMessage({
                   'troubleFound': true
@@ -263,7 +309,6 @@ setTimeout(function(){
           
                         const strokeAttached = child.strokes
                         const strokeAttachedLength = strokeAttached.length
-
           
                         if (strokeAttachedLength === 1) {
 
@@ -302,7 +347,7 @@ setTimeout(function(){
                               child.strokeStyleId !== "S:1e185f3fefaee1d886726255a6e2275edd35df85,32:23" && 
                               child.strokeStyleId !== "S:710b40726a4ac51bcfb30d733c9b25a887ffdc92,874:13"
                               ){
-                                console.log(child.strokeStyleId)
+                                // console.log(child.strokeStyleId)
                                 arrayIssue.push("2px stroke not right: " + child.name)
                                 arrayStrokeTwo.push(child.name)
                                 // console.log("2px stroke wrong " + child.name)
@@ -374,6 +419,7 @@ setTimeout(function(){
             'issueLength': arrayIssueLength,
             'arrayWrongFont': arrayWrongFont,
             'arrayDescMissing': arrayNoDesc,
+            'arrayUniqueNameCheck': arrayUniqueNameCheck,
             'arrayNoInstance': arrayNoInstance,
             'arrayFontStyle': arrayFontStyle,
             'arrayFrameCheck': arrayFrameCheck,
@@ -386,7 +432,8 @@ setTimeout(function(){
             'arrayStorykBookNameMissing': arrayStorykBookNameMissing,
             'arrayStoryAvatar': arrayStoryAvatar,
             'arrayFontStyleMixed': arrayFontStyleMixed,
-            'arrayFrameDup': arrayFrameDup
+            'arrayFrameDup': arrayFrameDup,
+            'arrayIpsumFound': arrayIpsumFound
           }) 
 
         } else {

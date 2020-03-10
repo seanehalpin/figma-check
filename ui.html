@@ -523,6 +523,8 @@ setTimeout(function(){
   var errorStoryBook = event.data.pluginMessage.arrayStorykBookNameMissing
   var errorStoryBookAvatar = event.data.pluginMessage.arrayStoryAvatar
   var errorFrameDup = event.data.pluginMessage.arrayFrameDup
+  var errorIpsum = event.data.pluginMessage.arrayIpsumFound
+
 
   var issueNoDesc = event.data.pluginMessage.arrayDescMissing;
   var issueNestedFrame = event.data.pluginMessage.arrayFrameCheck;
@@ -535,6 +537,14 @@ setTimeout(function(){
   // excute
 
   checker(
+    errorIpsum,
+    "<div class='error'>",
+    "<div class='icon icon--type-error'></div>",
+    "'Lorem Ipsum' placeholder text has been ",
+    "error-wrap"
+  );
+
+  checker(
     errorWrongFont,
     "<div class='error'>",
     "<div class='icon icon--type-error'></div>",
@@ -545,7 +555,7 @@ setTimeout(function(){
   checker(
     arrayFontStyleMixed,
     "<div class='error'>",
-    "<div class='icon icon--break-error'></div>",
+    "<div class='icon icon--type-error'></div>",
     "Mixed fonts found on layer ",
     "error-wrap"
   );
