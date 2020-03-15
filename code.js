@@ -7,7 +7,6 @@ setTimeout(function () {
         let arrayIssue = [];
         // error holder arrays
         let arrayMasterComponent = [];
-        let arrayUniqueName = [];
         let arrayWrongFont = [];
         let arrayNoDesc = [];
         let arrayUniqueNameCheck = [];
@@ -28,6 +27,9 @@ setTimeout(function () {
         let arrayFoundStoryBook = [];
         let arrayStorykBookNameMissing = [];
         let arrayStoryAvatar = [];
+        let arrayScale = [];
+        const scale = { horizontal: "SCALE", vertical: "SCALE" };
+        const scaleString = JSON.stringify(scale);
         function checkIfArrayIsUnique(myArray) {
             return myArray.length === new Set(myArray).size;
         }
@@ -110,22 +112,6 @@ setTimeout(function () {
                             'troubleFound': true
                         });
                     }
-                    // unique name checker
-                    // searchAll.forEach(item => {
-                    //   if (item.type === 'COMPONENT') {
-                    //     if(item.name === node.name) {
-                    //       arrayUniqueName.push(item.name)
-                    //     }
-                    //   }
-                    // })
-                    // const uniqueNameLength = arrayUniqueName.length
-                    // if (uniqueNameLength >= 2) {
-                    //   arrayError.push("Duplicate name")
-                    //   arrayUniqueNameCheck.push(node.name)
-                    //   figma.ui.postMessage({
-                    //     'troubleFound': true
-                    //   })
-                    // }
                     // component desc checker
                     const descriptionLength = node.description.length;
                     if (descriptionLength === 0) {
@@ -178,6 +164,18 @@ setTimeout(function () {
                                 // console.log(joined)
                                 if (joined.indexOf(loremText) !== -1) {
                                     arrayIpsumFound.push("found");
+                                    figma.ui.postMessage({
+                                        'troubleFound': true
+                                    });
+                                }
+                            }
+                            // scale checker
+                            let childConstraints = child.constraints;
+                            let childConstraintsString = JSON.stringify(childConstraints);
+                            if (childConstraintsString === scaleString) {
+                                if (child.name !== "fill") {
+                                    arrayIssue.push("Scaling found: " + child.name);
+                                    arrayScale.push(child.name);
                                     figma.ui.postMessage({
                                         'troubleFound': true
                                     });
@@ -289,6 +287,7 @@ setTimeout(function () {
                     arrayStrokeGrey.reverse();
                     arrayStrokeTwo.reverse();
                     arrayFontStyleMixed.reverse();
+                    arrayScale.reverse();
                     figma.ui.postMessage({
                         'errorLength': arrayErrorLength,
                         'issueLength': arrayIssueLength,
@@ -308,7 +307,8 @@ setTimeout(function () {
                         'arrayStoryAvatar': arrayStoryAvatar,
                         'arrayFontStyleMixed': arrayFontStyleMixed,
                         'arrayFrameDup': arrayFrameDup,
-                        'arrayIpsumFound': arrayIpsumFound
+                        'arrayIpsumFound': arrayIpsumFound,
+                        'arrayScale': arrayScale
                     });
                 }
                 else {
