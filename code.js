@@ -92,6 +92,19 @@ setTimeout(function () {
                                                 'troubleFound': true
                                             });
                                         }
+                                        if (granchild.name === 'Avatar') {
+                                            if (granchild.visible === true && granchild.children.visible !== true) {
+                                                granchild.children.forEach(newchild => {
+                                                    if (newchild.name === 'Ellipse' && newchild.visible === 'false') {
+                                                        arrayError.push("Missing Avatar");
+                                                        arrayStoryAvatar.push("missing");
+                                                        figma.ui.postMessage({
+                                                            'troubleFound': true
+                                                        });
+                                                    }
+                                                });
+                                            }
+                                        }
                                     });
                                 }
                             });
@@ -172,13 +185,22 @@ setTimeout(function () {
                             // scale checker
                             let childConstraints = child.constraints;
                             let childConstraintsString = JSON.stringify(childConstraints);
-                            if (childConstraintsString === scaleString) {
-                                if (child.name !== "fill") {
-                                    arrayIssue.push("Scaling found: " + child.name);
-                                    arrayScale.push(child.name);
-                                    figma.ui.postMessage({
-                                        'troubleFound': true
-                                    });
+                            if (child.layoutMode === "NONE") {
+                                if (childConstraintsString === scaleString) {
+                                    if (child.name === "fill" || child.name === "Fill" || child.name === "Vector" || child.name === "vector") {
+                                        // console.log(child.name)
+                                    }
+                                    else {
+                                        let thisParent = child.parent;
+                                        if (thisParent.type !== 'GROUP') {
+                                            console.log("parent isnt a group, child: " + child.name + ", parent: " + thisParent.name);
+                                            arrayIssue.push("Scaling found: " + child.name);
+                                            arrayScale.push(child.name);
+                                            figma.ui.postMessage({
+                                                'troubleFound': true
+                                            });
+                                        }
+                                    }
                                 }
                             }
                             // frame checker
